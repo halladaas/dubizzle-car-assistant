@@ -58,6 +58,84 @@ since ~100 rows doesn't need an approximate index. Memory uses SQLite for both s
 (session messages, summarized past 12 turns) and long-term (preferences, leads, bookings) —
 simple, inspectable, and a drop-in swap to Postgres if this went to production.
 
+### Why no agent framework (LangGraph, Google ADK, etc.)
+
+Both are built to solve problems this app doesn't have:
+
+- **LangGraph** is a graph-based state machine — its value is cycles, conditional branching
+  across many nodes, parallel/fan-out tool calls, and durable checkpointed state you can pause
+  and resume across sessions. This agent's actual control flow is one straight line: classify
+  intent → call one of five tool functions → generate a response. There's no branch to model
+  as a graph and no long-running state to checkpoint — short/long-term memory is already
+  handled explicitly by `core/memory.py`'s SQLite tables, which is what LangGraph's persistence
+  layer would otherwise exist to provide.
+- **Google ADK** is built around multi-agent hierarchies (agents delegating to sub-agents via
+  an agent-to-agent protocol) and ships its own session/state services and Vertex AI-oriented
+  deployment path. This is a single agent with no sub-agents to orchestrate, and adopting ADK's
+  session service would mean either running it alongside the SQLite memory layer already built
+  (duplicated state) or replacing SQLite with ADK's abstraction (unnecessary coupling to a
+  Vertex-centric deployment model this take-home doesn't call for).
+
+Concretely, choosing either here would cost more than it buys:
+
+- **Traceability** — the assessment explicitly grades this. With a hand-written loop, a stack
+  trace or a breakpoint lands in code you wrote (`core/agent.py`, `core/tools.py`); with a
+  framework, it first passes through the framework's own executor/runtime before reaching your
+  logic, and `data/traces.db`'s per-call latency/token logging would need to instrument
+  *inside* that runtime rather than wrapping a plain function call.
+- **Latency/cost** — both frameworks add state-serialization and orchestration overhead between
+  steps, which is real cost when a single chat turn is meant to return in ~1–2s against a
+  free-tier model with a 15 requests/minute ceiling (`gemini-3.5-flash-lite`). A five-intent
+  linear flow doesn't have enough steps for that overhead to be worth paying.
+- **Interview defensibility** — every function in the control loop is one I can explain line by
+  line; a framework means part of the explanation is the framework's design choices rather than
+  mine, which is a weaker position for a take-home meant to demonstrate engineering judgment.
+
+If this grew into a genuinely multi-agent system (e.g. a separate pricing-negotiation agent, a
+document-verification agent, human-in-the-loop approval steps), LangGraph's or ADK's
+orchestration would start earning its overhead — it doesn't here.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    U[User message] --> IC["Intent classification (LLM call)"]
+
+    IC -->|inventory_query| FE["Filter extraction (LLM call)"]
+    IC -->|booking| BK["book_slot tool<br/>(validate Mon–Sat 8am–8pm)"]
+    IC -->|lead_info| LD["save_lead tool"]
+    IC -->|chitchat| RG
+    IC -->|out_of_scope / competitor| CR["Canned decline reply"]
+
+    FE --> PF["Pandas structured filter<br/>(price / year / make / body type)"]
+    PF -->|empty result| RX["Relax filters one field at a time<br/>→ full-corpus fallback"]
+    RX --> FS
+    PF -->|has rows| FS["FAISS semantic search<br/>(IndexFlatIP, within filtered rows)"]
+
+    FS --> RG["Response generation (LLM call)<br/>grounded in retrieved car rows"]
+    BK --> RG
+    LD --> RG
+
+    subgraph Memory [SQLite]
+        ST["Short-term: session messages<br/>+ rolling summary after 12 turns"]
+        LT["Long-term: users / preferences /<br/>car_interactions / leads / bookings"]
+    end
+
+    ST <-.-> IC
+    ST <-.-> RG
+    LT <-.-> RG
+
+    RG --> R[Response to user]
+
+    IC -.->|every LLM call logged| TR[(traces.db:<br/>component, latency, tokens)]
+    FE -.-> TR
+    RG -.-> TR
+```
+
+Every arrow above is a real function call in `core/agent.py`, `core/retrieval.py`,
+`core/memory.py`, and `core/tools.py` — no orchestration framework sits between this diagram
+and the code.
+
 ## Design decisions
 
 The dataset had no structured Price/mileage/body-type fields — those values lived
