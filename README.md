@@ -46,79 +46,33 @@ logic against fixtures). Run the retrieval eval: `uv run python eval/run_eval.py
 
 ## Why these choices
 
-**Streamlit over a notebook.** The brief allows either; Streamlit gives a real chat
-interface (message history, image cards for listings, a sidebar for session info) that
-exercises the backend the way an actual user would, which matters more here than
-notebook-native inspectability — and it still stays a thin client: every piece of state
-(memory, retrieval, bookings, leads) lives server-side in `core/`, so the backend is fully
-usable and testable without the UI at all.
-
-**An explicit control loop over an agent framework (LangChain/LangGraph/CrewAI).**
-`core/agent.py` is: classify intent → route to one of a handful of hand-written tool
-functions in `core/tools.py` → synthesize a response. No hidden retry loops, no framework
-abstraction between a bug and the code causing it. Every step is a plain Python function you
-can set a breakpoint in or unit-test in isolation (see `tests/`), and every LLM call is
-logged to `data/traces.db` with component, latency, and token counts — that's the
-traceability story: nothing happens that isn't a visible, loggable function call.
-
-**Hybrid pandas + FAISS retrieval over pure vector search.** `core/retrieval.py` filters the
-inventory DataFrame on structured fields (make/price/year/body_type) *first* — free, instant,
-and it can never hallucinate a nonexistent car or ignore a hard price ceiling, which
-vector-search-alone is prone to. FAISS (`IndexFlatIP`, exact/brute-force — at ~100 rows there's
-no reason to reach for an approximate index) then ranks *within* the filtered survivors by
-semantic similarity, so "something rugged for desert driving" still works within whatever
-make/price/year the user already stated. If a filter combination returns nothing, fields are
-relaxed one at a time (price ceiling first) before falling back to full-corpus semantic search,
-and the agent tells the user it broadened the search rather than silently returning empty or
-irrelevant results.
-
-**SQLite over an external memory service.** `core/memory.py` covers both memory tiers with
-plain tables: short-term is just the last N messages for a `session_id` (no separate
-in-process buffer, so it survives a backend restart), summarized into a rolling
-`session_summaries` row once a conversation passes 12 messages to keep prompt-token cost
-bounded; long-term is `users` / `preferences` / `car_interactions` / `leads` /
-`bookings` keyed by `user_id`, condensed into a short natural-language blurb (never raw rows)
-injected into the system prompt on a returning user's first turn. It's a single file, needs
-no setup, and is fully inspectable with any SQLite browser — appropriate for a ~100-row,
-single-instance take-home; a real deployment would swap it for Postgres without touching
-`core/agent.py` or `core/tools.py`.
+I chose Streamlit over a notebook for a real chat UI that exercises the backend the way an
+actual user would, while keeping all state server-side so the backend stays fully testable on
+its own. For the agent, I used an explicit control loop (intent classification → tool routing
+→ response) instead of a framework like LangChain, since at this scope it keeps every step a
+visible, loggable, unit-testable function rather than hiding logic behind framework
+abstractions. For retrieval, I used hybrid pandas filtering + FAISS: structured filters
+(price/year/make) are applied first so hard constraints are never violated or hallucinated,
+and FAISS then ranks the filtered survivors by semantic similarity — exact/brute-force search
+since ~100 rows doesn't need an approximate index. Memory uses SQLite for both short-term
+(session messages, summarized past 12 turns) and long-term (preferences, leads, bookings) —
+simple, inspectable, and a drop-in swap to Postgres if this went to production.
 
 ## Design decisions
 
-The dataset shape drove more decisions than the model choice did. The provided spreadsheet
-turned out to have **two unrelated 100-row sheets** (`raw dataset`, `cleaned dataset`, almost
-no listing overlap) and **no Price, mileage, or body-type columns** at all — those live
-inconsistently inside scraped, HTML-laden description text (dealer contact blocks, hashtags,
-Arabic listings, monthly finance figures that aren't the actual price). Rather than fabricate
-data or skip structured filtering, `scripts/prepare_dataset.py` runs a one-time Gemini
-function-calling pass per listing that extracts `price_aed`, `mileage_km`, `body_type`,
-`transmission`, `fuel_type`, `condition`, `warranty_years`, and `regional_spec` **only when
-the source text states them** (never inferred), caching the result to `data/cars.csv`. A
-field the listing doesn't mention stays `null`, and the agent is instructed to say "not
-listed" rather than guess — so the structured pre-filter, the leads it produces, and the
-grounding guarantee all stay honest about what's actually known. The tradeoff: only ~31% of
-listings have a confirmed price, which the relax-and-fallback logic in `retrieval.py` exists
-specifically to handle gracefully. Guardrails (`core/agent.py`'s intent classifier) route
-out-of-scope and competitor-comparison questions to **fixed canned replies**, not a freeform
-LLM response — cheaper and more reliably on-policy than trusting the model to always refuse
-correctly. Both Gemini model tiers used (filter extraction/intent classification/booking
-&lead extraction vs. the final conversational reply) currently point at the same
-`gemini-3.5-flash-lite` tier: the non-lite "flash" models turned out to be thinking models
-that spend 100+ reasoning tokens even on a one-word reply by default, which actively fights
-the brief's low-latency/low-cost goals for tasks this small, so lite is the default with the
-larger tier left as a one-line env var swap (`GEMINI_LARGE_MODEL`) if richer prose is worth
-the added latency.
+The dataset had no structured Price/mileage/body-type fields — those values lived
+inconsistently inside scraped description text. A one-time enrichment script extracts them
+via LLM function-calling only when explicitly stated in the source text (never inferred), so
+retrieval and grounding stay honest about what's actually known, at the cost of ~31% price
+coverage — handled by retrieval's filter-relaxation fallback. Guardrails route out-of-scope/
+competitor questions to fixed canned replies rather than trusting the LLM to freeform-refuse
+correctly.
 
-Out of scope for this pass: authentication (a typed name/ID is trusted as-is, matching the
-brief's "recognize a user ID or name" framing); a real payments/CRM integration for leads
-(the SQLite `leads` table + mirrored `data/leads.csv` simulate that, as asked); voice/RTL
-handling for the ~6% of listings with Arabic text (they load and filter fine, just aren't
-translated); slot-conflict checking on bookings (the brief only asked for the Mon–Sat
-8am–8pm window, not double-booking prevention); and combining the per-turn intent
-classification + filter-extraction calls into one to shave latency, which would cut RPM
-pressure against the free tier's ceiling (15 requests/minute on `flash-lite`, easily hit by a
-fast back-and-forth — handled today with request retry/backoff in `core/llm.py`, not by
-avoiding the calls).
+Out of scope: real authentication (a typed name/ID is trusted as-is), a real payments/CRM
+integration for leads (simulated via SQLite + CSV), Arabic/RTL translation, and booking
+slot-conflict prevention (only the Mon–Sat 8am–8pm window was required). A next step would be
+merging the per-turn intent-classification and filter-extraction LLM calls into one to reduce
+latency and free-tier rate-limit pressure.
 
 ## Evaluation
 
