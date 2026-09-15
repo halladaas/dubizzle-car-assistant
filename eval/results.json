@@ -1,0 +1,262 @@
+[
+  {
+    "id": "s1",
+    "type": "structured",
+    "query": "Land Rover Range Rover Evoque under 150000 AED",
+    "retrieved_car_ids": [
+      74,
+      80
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0,
+    "grounding": {
+      "mentioned_car_ids": [
+        74
+      ],
+      "violations": [],
+      "grounded": true
+    }
+  },
+  {
+    "id": "s2",
+    "type": "structured",
+    "query": "Toyota Prado",
+    "retrieved_car_ids": [
+      66
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "s3",
+    "type": "structured",
+    "query": "BMW M4 convertible",
+    "retrieved_car_ids": [
+      25,
+      22
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "s4",
+    "type": "structured",
+    "query": "Audi Q8 under 210000 AED",
+    "retrieved_car_ids": [
+      6,
+      38,
+      39,
+      40,
+      75
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "s5",
+    "type": "structured",
+    "query": "Nissan Patrol",
+    "retrieved_car_ids": [
+      82,
+      42,
+      24,
+      43
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "s6",
+    "type": "structured",
+    "query": "Mercedes GLC",
+    "retrieved_car_ids": [
+      9,
+      1
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "s7",
+    "type": "structured",
+    "query": "Haval H9",
+    "retrieved_car_ids": [
+      4,
+      95
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "sem1",
+    "type": "semantic",
+    "query": "something rugged for desert driving",
+    "retrieved_car_ids": [
+      28,
+      4,
+      95,
+      30,
+      66
+    ],
+    "llm_judge_score": 3,
+    "llm_judge_reason": "The retrieved cars include dedicated off-road vehicles well-suited for desert driving like the Toyota Hilux and Toyota Prado, alongside a Haval H9 and an electric Toyota bz4x which is less ideal for desert dunes. The mix is moderately relevant.",
+    "grounding": {
+      "mentioned_car_ids": [
+        28,
+        66,
+        4
+      ],
+      "violations": [],
+      "grounded": true
+    }
+  },
+  {
+    "id": "sem2",
+    "type": "semantic",
+    "query": "a luxurious ultra high-end car for a special event",
+    "retrieved_car_ids": [
+      70,
+      19,
+      45,
+      88,
+      79
+    ],
+    "llm_judge_score": 5,
+    "llm_judge_reason": "The retrieved list includes top-tier ultra-luxury vehicles like the 2026 Rolls-Royce Cullinan Black Badge and the 2010 Rolls-Royce Ghost, which are quintessential choices for a luxurious ultra high-end special event. Other options like the BMW M5 Manhart and Range Rover Autobiography also offer high-end luxury, making the set very relevant to the query."
+  },
+  {
+    "id": "sem3",
+    "type": "semantic",
+    "query": "family-friendly car with plenty of space",
+    "retrieved_car_ids": [
+      84,
+      98,
+      18,
+      86,
+      15
+    ],
+    "llm_judge_score": 4,
+    "llm_judge_reason": "The retrieved cars include SUVs like the 2016 Ford Explorer and 2023 Chevrolet Captiva which explicitly mention being spacious and perfect for families, making them relevant matches for a family-friendly car with plenty of space."
+  },
+  {
+    "id": "sem4",
+    "type": "semantic",
+    "query": "an eco-friendly electric car",
+    "retrieved_car_ids": [
+      30,
+      79,
+      13,
+      62,
+      50
+    ],
+    "llm_judge_score": 5,
+    "llm_judge_reason": "The retrieved cars include multiple fully electric vehicles (2025 Toyota bz4x, Xiaomi YU7, BYD Han, BMW iX3, and a 2018 Tesla Model X), which directly match the user's request for an eco-friendly electric car."
+  },
+  {
+    "id": "sem5",
+    "type": "semantic",
+    "query": "a fun sports car for weekend drives",
+    "retrieved_car_ids": [
+      85,
+      54,
+      90,
+      36,
+      53
+    ],
+    "llm_judge_score": 3,
+    "llm_judge_reason": "The retrieved list contains a mix of vehicles, including some performance-oriented cars like the Mercedes-Benz A 45 AMG and Dodge Challenger, but also family/urban crossovers like the Toyota Urban Cruiser and JAC JS4 which are definitely not fun sports cars. Overall, the relevance is mixed."
+  },
+  {
+    "id": "mt1",
+    "type": "multiturn",
+    "query": "under 200000 AED",
+    "retrieved_car_ids": [
+      74,
+      80
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0,
+    "grounding": {
+      "mentioned_car_ids": [
+        74
+      ],
+      "violations": [],
+      "grounded": true
+    }
+  },
+  {
+    "id": "mt2",
+    "type": "multiturn",
+    "query": "under 190000 AED",
+    "retrieved_car_ids": [
+      43
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "mt3",
+    "type": "multiturn",
+    "query": "pickup trucks only",
+    "retrieved_car_ids": [
+      49,
+      52
+    ],
+    "precision_at_5": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 1.0
+  },
+  {
+    "id": "nm1",
+    "type": "no_match",
+    "query": "Lamborghini Huracan under 50000 AED",
+    "retrieved_car_ids": [
+      0,
+      12,
+      61,
+      90,
+      47
+    ],
+    "relaxed_or_fallback": true,
+    "grounding": {
+      "mentioned_car_ids": [
+        12,
+        47,
+        90,
+        0
+      ],
+      "violations": [],
+      "grounded": true
+    }
+  },
+  {
+    "id": "nm2",
+    "type": "no_match",
+    "query": "Rolls-Royce under 20000 AED",
+    "retrieved_car_ids": [
+      29,
+      31,
+      19,
+      88
+    ],
+    "relaxed_or_fallback": true
+  },
+  {
+    "id": "nm3",
+    "type": "no_match",
+    "query": "Toyota Corolla under 5000 AED",
+    "retrieved_car_ids": [
+      71
+    ],
+    "relaxed_or_fallback": true
+  }
+]

@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment / secrets
+.env
+
+# Data build artifacts
+data/embeddings.npy
+data/embedding_ids.npy
+data/faiss.index
+data/memory.db
+data/leads.csv
+data/traces.db
+
+# OS
+.DS_Store

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "s1",
+    "type": "structured",
+    "query": "Land Rover Range Rover Evoque under 150000 AED",
+    "expected_car_ids": [74, 80],
+    "check_grounding": true
+  },
+  {
+    "id": "s2",
+    "type": "structured",
+    "query": "Toyota Prado",
+    "expected_car_ids": [66]
+  },
+  {
+    "id": "s3",
+    "type": "structured",
+    "query": "BMW M4 convertible",
+    "expected_car_ids": [22, 25]
+  },
+  {
+    "id": "s4",
+    "type": "structured",
+    "query": "Audi Q8 under 210000 AED",
+    "expected_car_ids": [6, 38, 39, 40, 75]
+  },
+  {
+    "id": "s5",
+    "type": "structured",
+    "query": "Nissan Patrol",
+    "expected_car_ids": [24, 42, 43, 82]
+  },
+  {
+    "id": "s6",
+    "type": "structured",
+    "query": "Mercedes GLC",
+    "expected_car_ids": [1, 9]
+  },
+  {
+    "id": "s7",
+    "type": "structured",
+    "query": "Haval H9",
+    "expected_car_ids": [4, 95]
+  },
+  {
+    "id": "sem1",
+    "type": "semantic",
+    "query": "something rugged for desert driving",
+    "check_grounding": true
+  },
+  {
+    "id": "sem2",
+    "type": "semantic",
+    "query": "a luxurious ultra high-end car for a special event"
+  },
+  {
+    "id": "sem3",
+    "type": "semantic",
+    "query": "family-friendly car with plenty of space"
+  },
+  {
+    "id": "sem4",
+    "type": "semantic",
+    "query": "an eco-friendly electric car"
+  },
+  {
+    "id": "sem5",
+    "type": "semantic",
+    "query": "a fun sports car for weekend drives"
+  },
+  {
+    "id": "mt1",
+    "type": "multiturn",
+    "prior_turns": ["show me Land Rover SUVs"],
+    "query": "under 200000 AED",
+    "expected_car_ids": [74, 80],
+    "check_grounding": true
+  },
+  {
+    "id": "mt2",
+    "type": "multiturn",
+    "prior_turns": ["show me Nissan Patrol"],
+    "query": "under 190000 AED",
+    "expected_car_ids": [43]
+  },
+  {
+    "id": "mt3",
+    "type": "multiturn",
+    "prior_turns": ["I'm looking at Toyota"],
+    "query": "pickup trucks only",
+    "expected_car_ids": [49, 52]
+  },
+  {
+    "id": "nm1",
+    "type": "no_match",
+    "query": "Lamborghini Huracan under 50000 AED",
+    "expected_car_ids": [],
+    "check_grounding": true
+  },
+  {
+    "id": "nm2",
+    "type": "no_match",
+    "query": "Rolls-Royce under 20000 AED",
+    "expected_car_ids": []
+  },
+  {
+    "id": "nm3",
+    "type": "no_match",
+    "query": "Toyota Corolla under 5000 AED",
+    "expected_car_ids": []
+  }
+]
